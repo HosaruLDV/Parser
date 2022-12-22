@@ -1,18 +1,24 @@
+import json
+import os
+
+cwd = os.getcwd()
 class Connector:
     """
     Класс коннектор к файлу, обязательно файл должен быть в json формате
     не забывать проверять целостность данных, что файл с данными не подвергся
     внешнего деградации
     """
-    __data_file = None
-    @property
-    def data_file(self):
-        pass
-
-    @data_file.setter
-    def data_file(self, value):
-        # тут должен быть код для установки файла
+    def __init__(self, df):
+        self.__data_file = os.path.join(cwd, df)
         self.__connect()
+    # @property
+    # def data_file(self):
+    #     pass
+    #
+    # @data_file.setter
+    # def data_file(self, value):
+    #     # тут должен быть код для установки файла
+    #     self.__connect()
 
     def __connect(self):
         """
@@ -21,13 +27,32 @@ class Connector:
         Также проверить на деградацию и возбудить исключение
         если файл потерял актуальность в структуре данных
         """
-        pass
+        try:
+            fp = open(self.__data_file, 'r', encoding='utf-8')
+        except FileNotFoundError:
+            print(f'Саздание {self.__data_file}')
+            fp = open(self.__data_file,'w', encoding='utf-8')
+            data = []
+            json.dump(data, fp)
+        else:
+            data = json.load(fp)
+            print(data)
+        finally:
+            fp.close()
+
 
     def insert(self, data):
         """
         Запись данных в файл с сохранением структуры и исходных данных
         """
-        pass
+        fp = open(self.__data_file, 'r', encoding='utf-8')
+        r_data = json.load(fp)
+        r_data.append(data)
+        fp.close()
+
+        fp = open(self.__data_file,'w', encoding='utf-8')
+        json.dump(r_data, fp)
+        fp.close()
 
     def select(self, query):
         """
@@ -37,7 +62,19 @@ class Connector:
         {'price': 1000}, должно отфильтровать данные по полю price
         и вернуть все строки, в которых цена 1000
         """
-        pass
+        fp = open(self.__data_file,'r', encoding='utf-8')
+        data = json.load(fp)
+        fp.close()
+
+        if not len(query): return data
+
+        query_data = []
+
+        for k in data[query.keys()]:
+            if data[k] == query.values():
+                query_data.append(data[k])
+
+        return query_data
 
     def delete(self, query):
         """
@@ -45,7 +82,24 @@ class Connector:
         как в методе select. Если в query передан пустой словарь, то
         функция удаления не сработает
         """
-        pass
+        if not len(query): return
+
+        fp = open(self.__data_file,'r', encoding='utf-8')
+        data = json.load(fp)
+        fp.close()
+        cntr = 0
+
+        for k in data:
+            if k.get(list(query.keys())[0]) == list(query.values())[0]:
+                del data[cntr]
+
+            cntr += 1
+
+        fp = open(self.__data_file,'w', encoding='utf-8')
+        json.dump(data, fp)
+        fp.close()
+
+        return
 
 
 if __name__ == '__main__':
